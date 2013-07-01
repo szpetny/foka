@@ -1,52 +1,31 @@
 var logicJS = {
 	db: "",	
 		
-	initDb: function() {
-		if (!$.cookie('fokarium')) {
-			db = TAFFY();
-		}
-		else {
-			var jsonDb = $.cookie('fokarium');
-			db = TAFFY(jsonDb);
-		}
-		
-	},	
-	
 	dragFok: function() {
 		$("div.draggableFok").draggable();
-		this.makeDroppable();
 	},
 	
 	makeDroppable: function() {
 		$("td.droppableCell").droppable({
 			drop: function(event, ui) {
+				var that = this;
 				var tr = $(this).parent();
-				var rowNo = tr.index();
+				var name = $('td.humanName', $(this).parent()).text();
 				
-				var counterVal;
-				if ($.trim($(tr).children().last().text()) == '') {
-					counterVal = 1;
-				}
-				else {
-					var tmpVal = $.trim($(tr).children().last().text());
-					tmpVal = parseInt(tmpVal, '10');
-					counterVal = tmpVal + 1;
-				}
-				
-				$(tr).children().last().text(counterVal);
-				$(tr).children().first().children().first().val(counterVal);
-
-				logicJS.update(rowNo);
-				
-				if ($.trim($(tr).children().last().text()) != '') {
-					$(this).find('img').css('display', '');
-				}
-				$("#zoo").html(
-					"<div class=\"draggableFok\" style=\"width:134px; height:127px; float:left;\">"
-						+ "<img src=\"../resources/images/fOK.png\" />"
-					+"</div>"	
-				);
-				logicJS.makeItDraggable();
+				logicJS.update(name, function(current) {
+					var counterVal = current.fokCount; 
+					$('.fOkCounter', tr).text(counterVal);
+					
+					if ($.trim($('.fOkCounter', tr).text()) != '') {
+						$(that).find('img').css('display', '');
+					}
+					$("#zoo").html(
+						"<div class=\"draggableFok\" style=\"width:67px; height:64px; float:left;\">"
+							+ "<img src=\"resources/images/fOK.png\" />"
+						+"</div>"	
+					);
+					logicJS.makeItDraggable();
+				});
 			}
 		});
 	},
@@ -57,67 +36,93 @@ var logicJS = {
 		});
 	},
 	
-	createFokarium: function() {
-		$("#fokarium").append('<table class="ui-widget-content">');
-		$("#fokarium > table").append(
-			'<thead id="header" class="ui-widget-header">' 
-				+ '<tr><td style="padding:10px">Human resource</td><td style="padding:10px">fOK</td><td style="padding:20px">fOK counter</td></tr>'
-			+ '</thead>'
-		);
-		$("#fokarium > table").append('<tbody class="ui-widget-content">');
+	loadFokarium: function() {
+		$('#fokarium tbody').empty();
 		
-		
-		db().each(function (record, recordnumber) {
-			logicJS.addNewRow(record.id, record.humanName, record.fokCount);
-		});
-	},
-	
-	addNewHumanResource: function() {
-		$("#add").click(function() {
-			var rowNo = $("#fokarium > table tbody tr:last").index() + 1;
-			var name = $.trim($("#humanRsrc").val());
-			logicJS.insert(rowNo, name);
-			logicJS.addNewRow(rowNo, name, 0);
-			$("#humanRsrc").val('');
+		$.getJSON('api/hr/list', function(data) {
+			data.forEach(function (record) {
+				logicJS.addNewRow(record.humanName, record.fokCount);
+			});
 			logicJS.makeDroppable();
 		});
 	},
 	
-	addNewRow: function(rowNo, name, fokCount) {
-		$("#fokarium > table > tbody").append('<tr name="' + name + '" class="record">');
+	initButtons: function() {
+		$("#add").click(function() {
+			var name = $.trim($("#humanRsrc").val());
+			logicJS.insert(name);
+			logicJS.addNewRow(name, 0);
+			$("#humanRsrc").val('');
+			logicJS.makeDroppable();
+		});
 		
-		var rowNo = $("#fokarium > table tr:last").index();
-		
-		$("#fokarium > table > tbody > tr[name='" + name + "']")
-			.append('<td class="ui-widget-content" style="padding:20px" name="facet">' + name + 
-						'<input type="hidden" id="fokCount' + rowNo + '" value="" />' +
-					'</td>');
-		
-		var display = fokCount > 0 ? '' : 'style="display:none"';
-		$("#fokarium > table > tbody > tr[name='" + name + "']")
-			.append('<td class="ui-widget-content droppableCell" style="width:134px; height:127px;">' +
-						'<img src="../resources/images/fOK.png" ' + display + ' />' +
-					'</td>');
-		
-		$("#fokarium > table > tbody > tr[name='" + name + "']")
-			.append('<td class="ui-widget-content fOkCounter" style="padding:20px">' + fokCount + '</td>');
+		$("#reset").click(function(){
+			logicJS.reset(function() {
+				logicJS.loadFokarium();
+			});
+		});
 	},
 	
-	insert: function(rowNo, name) {
-		db.insert({id: rowNo, humanName: name, fokCount: 0});
-		this.save();
+	addNewRow: function(name, fokCount) {
+		var that = this;
+		var row = $(Mustache.render($('#fok-row').text(), {
+			humanName: name,
+			fokCount: fokCount,
+			displayFOK: fokCount > 0
+		}));
+		
+		$("#fokarium > table > tbody").append(row);
+		$('td span.evaporateResource', row).click(function() {
+			that.evaporateResource(name, function() {
+				row.remove();
+			});
+		});
 	},
 	
-	update: function(rowNo) {
-		var fokCount = db({id: rowNo}).first().fokCount + 1;
-		db({id: rowNo}).update({fokCount: fokCount});
-		this.save();
+	insert: function(name) {
+		$.ajax({
+			url: 'api/hr',
+			type: 'POST',
+			data: JSON.stringify({
+				humanName: name
+			}),
+			contentType: 'application/json',
+			dataType: 'json'
+		});
 	},
 	
-	save: function() {
-		$.removeCookie("fokarium");
-		$.cookie("fokarium", db().stringify(), {expires: 365});
+	update: function(name, callback) {
+		$.ajax({
+			url: 'api/hr/' + name + '/raise',
+			type: 'POST',
+			dataType: 'json',
+			success: function(data) {
+				callback(data);
+			}
+		});
 	},
 	
+	evaporateResource: function(name, callback) {
+		$.ajax({
+			url: 'api/hr/' + name + '/evaporate',
+			type: 'POST',
+			dataType: 'json',
+			success: function(data) {
+				callback();
+			}
+		});
+	},
+	
+	reset: function(callback) {
+		$.ajax({
+			url: 'api/hr/reset',
+			type: 'POST',
+			dataType: 'json',
+			success: function(data) {
+				callback();
+			}
+		});
+	}
+		
 };
 
