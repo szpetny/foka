@@ -1,6 +1,4 @@
 var logicJS = {
-	db: "",	
-		
 	dragFok: function() {
 		$("div.draggableFok").draggable();
 	},
