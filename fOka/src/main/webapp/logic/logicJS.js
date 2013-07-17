@@ -71,9 +71,20 @@ var logicJS = {
 		
 		$("#fokarium > table > tbody").append(row);
 		$('td span.evaporateResource', row).click(function() {
-			that.evaporateResource(name, function() {
-				row.remove();
-			});
+			$("#evaporateConfirmation").dialog({
+				modal: true,
+				closeOnEscape: false,
+				buttons: [
+				{text: "Yes", click: function() { 
+									$(this).dialog("close");
+									that.evaporateResource(name, function() {
+										row.remove();
+									});
+							  }
+				},
+				{text: "No", click: function() { $(this).dialog("close");}},
+				]
+			}).show();
 		});
 	},
 	
