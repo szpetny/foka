@@ -102,6 +102,54 @@ var logicJS = {
 				]
 			}).show();
 		});
+		
+		$('[name="show"]').click(function(){
+			whichOne = $(this).parent().children('.comment');
+			$(whichOne).animate( {width: "70%", height: "50%"}, {queue: false, duration: 3000});
+		});
+		
+		$('[name="hide"]').click(function(){
+			whichOne = $(this).parent().children('.comment');
+			$(whichOne).css({ width: "", height: ""});
+		});
+		
+		$("#comment-form").dialog({
+			 autoOpen: false,
+			 height: 300,
+			 width: 350,
+			 modal: true,
+			 buttons: {
+			 "Add": function() {
+				that.addComment(name, $("#from").val(), $("#comment").val(), function() {that.updateCommentCell();}); 
+			 },
+			 "Cancel": function() {
+				 $(this).dialog("close");
+			 }},
+			 close: function() {
+				 $("#from").val("");
+				 $("#comment").val("");
+			 }
+		 });
+		
+		 $('[name="addComment"]').click(function() {
+			 $("#comment-form").dialog("open");
+		 });
+	},
+	
+	addComment: function(name, from, comment, callback) {
+		$.ajax({
+			url: 'api/hr/' + name + '/comment',
+			data: "FROM: " + from + "with LOVE: " + comment + "<br/>",
+			type: 'POST',
+			dataType: 'json',
+			success: function(data) {
+				callback(data);
+			}
+		});
+	},
+	
+	updateCommentCell: function() {
+		
 	},
 	
 	insert: function(name) {
@@ -147,7 +195,6 @@ var logicJS = {
 				callback();
 			}
 		});
-	}
-		
+	},
 };
 
