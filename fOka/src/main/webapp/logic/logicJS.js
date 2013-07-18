@@ -11,21 +11,32 @@ var logicJS = {
 				var name = $('td.humanName', $(this).parent()).text();
 				
 				logicJS.update(name, function(current) {
-					var counterVal = current.fokCount; 
-					$('.fOkCounter', tr).text(counterVal);
-					
-					if ($.trim($('.fOkCounter', tr).text()) != '') {
-						$(that).find('img').css('display', '');
-					}
-					$("#zoo").html(
-						"<div class=\"draggableFok\" style=\"width:67px; height:64px; float:left;\">"
-							+ "<img src=\"resources/images/fOK.png\" />"
-						+"</div>"	
-					);
+					logicJS.incrementFokCounter(tr, current);
+					logicJS.displayFok(tr, that);
+					logicJS.restoreFokImg();
 					logicJS.makeItDraggable();
 				});
 			}
 		});
+	},
+	
+	restoreFokImg: function() {
+		$("#zoo").html(
+			"<div class=\"draggableFok\" style=\"width:67px; height:64px; float:left;\">"
+				+ "<img src=\"resources/images/fOK.png\" />"
+			+"</div>"	
+		);
+	},
+	
+	incrementFokCounter: function(tr, currentHuman) {
+		var counterVal = currentHuman.fokCount; 
+		$('.fOkCounter', tr).text(counterVal);
+	},
+	
+	displayFok: function(tr, td) {
+		if ($.trim($('.fOkCounter', tr).text()) != '') {
+			$(td).find('img').css('display', '');
+		}
 	},
 	
 	makeItDraggable: function() {
