@@ -8,39 +8,44 @@ import org.springframework.stereotype.Repository;
 
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.Tuple;
 
 @Repository
 public class HumanResourceDAO {
 
 	@Autowired
 	private JedisPool jedisPool;
+	private static final String HUMAN_RESOURCES = "humanResources";
 	
 	public void add(HumanResource humanResource) {
 		Jedis jedis = jedisPool.getResource();
-		jedis.set(humanResource.getHumanName(), "0");
+		
+		jedis.zadd(HUMAN_RESOURCES, 0, humanResource.getHumanName());
 		humanResource.setFokCount(0);
 		jedisPool.returnResource(jedis);
 	}
 	
 	public void raise(HumanResource humanResource) {
 		Jedis jedis = jedisPool.getResource();
-		humanResource.setFokCount(jedis.incr(humanResource.getHumanName()));
+		jedis.zincrby(HUMAN_RESOURCES, humanResource.getFokCount() + 1 ,humanResource.getHumanName());
+		humanResource.setFokCount(jedis.zscore(HUMAN_RESOURCES, humanResource.getHumanName()).longValue());
 		jedisPool.returnResource(jedis);
 	}
 	
 	public void fall(HumanResource humanResource) {
 		Jedis jedis = jedisPool.getResource();
-		humanResource.setFokCount(jedis.decr(humanResource.getHumanName()));
+		jedis.zincrby(HUMAN_RESOURCES, humanResource.getFokCount() - 1 ,humanResource.getHumanName());
+		humanResource.setFokCount(jedis.zscore(HUMAN_RESOURCES, humanResource.getHumanName()).longValue());
 		jedisPool.returnResource(jedis);
 	}
 
 	public List<HumanResource> listAll() {
 		Jedis jedis = jedisPool.getResource();
 		List<HumanResource> all = new ArrayList<HumanResource>();
-		for (String key : jedis.keys("*")) {
+		for (Tuple tuple : jedis.zrevrangeByScoreWithScores(HUMAN_RESOURCES, Double.MAX_VALUE, 0)) {
 			HumanResource resource = new HumanResource();
-			resource.setHumanName(key);
-			resource.setFokCount(Long.parseLong(jedis.get(key)));
+			resource.setHumanName(tuple.getElement());
+			resource.setFokCount((long)tuple.getScore());
 			all.add(resource);
 		}
 		jedisPool.returnResource(jedis);
@@ -50,14 +55,15 @@ public class HumanResourceDAO {
 	
 	public void delete(String humanName) {
 		Jedis jedis = jedisPool.getResource();
-		jedis.del(humanName);
+		jedis.zrem(HUMAN_RESOURCES, humanName);
 		jedisPool.returnResource(jedis);
 	}
 
 	public void reset() {
 		Jedis jedis = jedisPool.getResource();
-		for (String key : jedis.keys("*")) {
-			jedis.set(key, "0");
+		for (String key : jedis.zrange(HUMAN_RESOURCES, 0, jedis.zcount(HUMAN_RESOURCES, 0, Double.MAX_VALUE).intValue())) {
+			jedis.zrem(HUMAN_RESOURCES, key);
+			jedis.zadd(HUMAN_RESOURCES, 0, key);
 		}
 		jedisPool.returnResource(jedis);
 	}
