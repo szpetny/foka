@@ -5,6 +5,8 @@ var logicJS = {
 	
 	makeDroppable: function() {
 		$("td.droppableCell").droppable({
+			hoverClass: 'ui-state-active',
+			tolerance: 'pointer',
 			drop: function(event, ui) {
 				var that = this;
 				var tr = $(this).parent();
@@ -41,7 +43,10 @@ var logicJS = {
 	
 	makeItDraggable: function() {
 		$("div.draggableFok").draggable({
-			snap: ".droppableCell"
+			snap: ".droppableCell",
+			snapMode: "both",
+			snapTolerance: 30,
+			revert: true
 		});
 	},
 	
