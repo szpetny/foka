@@ -57,6 +57,7 @@ public class HumanResourceDAO {
 		Jedis jedis = jedisPool.getResource();
 		jedis.zrem(HUMAN_RESOURCES, humanName);
 		jedisPool.returnResource(jedis);
+		deleteComments(humanName);
 	}
 
 	public void reset() {
@@ -65,6 +66,24 @@ public class HumanResourceDAO {
 			jedis.zrem(HUMAN_RESOURCES, key);
 			jedis.zadd(HUMAN_RESOURCES, 0, key);
 		}
+		jedisPool.returnResource(jedis);
+	}
+	
+	public String updateComments(String humanName, String comment) {
+		Jedis jedis = jedisPool.getResource();
+		if (jedis.exists(humanName)) {
+			jedis.append(humanName, comment);
+		}
+		else {
+			jedis.set(humanName, comment);
+		}
+		jedisPool.returnResource(jedis);
+		return jedis.get(humanName);
+	}
+	
+	private void deleteComments(String humanName) {
+		Jedis jedis = jedisPool.getResource();
+		jedis.del(humanName);
 		jedisPool.returnResource(jedis);
 	}
 }

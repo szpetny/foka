@@ -58,5 +58,11 @@ public class HumanResourceController {
 		dao.reset();
 		return "OK";
 	}
+	
+	@RequestMapping(value = "/hr/{name}/comment", method = RequestMethod.POST)
+	public @ResponseBody String addComment(@PathVariable String name, @RequestBody String comment) {
+		dao.updateComments(name, comment);
+		return "";
+	}
 
 }

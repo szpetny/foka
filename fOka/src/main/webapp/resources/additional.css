@@ -8,3 +8,12 @@
 
 h1 {color: #ffffff; margin: 20px auto}
 
+.comment {
+		background-color: pink;
+		width:200px;
+		height:1.1em;
+		text-align:center;
+		border:2px solid #CC0099;
+		margin:3px;
+		font-size:14px;
+		overflow: hidden;}
