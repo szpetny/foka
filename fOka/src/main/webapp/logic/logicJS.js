@@ -105,12 +105,12 @@ var logicJS = {
 		
 		$('[name="show"]').click(function(){
 			whichOne = $(this).parent().children('.comment');
-			$(whichOne).animate( {width: "70%", height: "50%"}, {queue: false, duration: 3000});
+			$(whichOne).animate({width: "500px", height: "300px"}, {queue: false, duration: 3000}).css({overflow: "auto"});
 		});
 		
 		$('[name="hide"]').click(function(){
 			whichOne = $(this).parent().children('.comment');
-			$(whichOne).css({ width: "", height: ""});
+			$(whichOne).css({ width: "", height: "", overflow: "hidden"});
 		});
 		
 		$("#comment-form").dialog({
