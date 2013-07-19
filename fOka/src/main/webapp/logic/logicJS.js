@@ -132,7 +132,9 @@ var logicJS = {
 		 });
 		
 		 $('[name="addComment"]').click(function() {
-			 $("#comment-form").dialog("open");
+			 var that = this;
+			 var who = $.trim($(that).parent().parent().parent().find("td.humanName").text());
+			 $("#comment-form").data("who", who).dialog("open");
 		 });
 	},
 	
