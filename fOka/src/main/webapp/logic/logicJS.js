@@ -103,16 +103,6 @@ var logicJS = {
 			}).show();
 		});
 		
-		$('[name="show"]').click(function(){
-			whichOne = $(this).parent().children('.comment');
-			$(whichOne).animate({width: "500px", height: "300px"}, {queue: false, duration: 3000}).css({overflow: "auto"});
-		});
-		
-		$('[name="hide"]').click(function(){
-			whichOne = $(this).parent().children('.comment');
-			$(whichOne).css({ width: "", height: "", overflow: "hidden"});
-		});
-		
 		$("#comment-form").dialog({
 			 autoOpen: false,
 			 height: 300,
@@ -120,7 +110,8 @@ var logicJS = {
 			 modal: true,
 			 buttons: {
 			 "Add": function() {
-				that.addComment(name, $("#from").val(), $("#comment").val(), function() {that.updateCommentCell();}); 
+				that.addComment($(this).data('who'), $("#comment").val(), function() {that.updateCommentTip();}); 
+				 $(this).dialog("close");
 			 },
 			 "Cancel": function() {
 				 $(this).dialog("close");
@@ -133,24 +124,23 @@ var logicJS = {
 		
 		 $('[name="addComment"]').click(function() {
 			 var that = this;
-			 var who = $.trim($(that).parent().parent().parent().find("td.humanName").text());
+			 var who = $.trim($(that).parent().siblings("td.humanName").text());
 			 $("#comment-form").data("who", who).dialog("open");
 		 });
 	},
 	
-	addComment: function(name, from, comment, callback) {
+	addComment: function(name, comment, callback) {
 		$.ajax({
 			url: 'api/hr/' + name + '/comment',
-			data: "FROM: " + from + "with LOVE: " + comment + "<br/>",
+			data: comment,
 			type: 'POST',
-			dataType: 'json',
 			success: function(data) {
 				callback(data);
 			}
 		});
 	},
 	
-	updateCommentCell: function() {
+	updateCommentTip: function() {
 		
 	},
 	
