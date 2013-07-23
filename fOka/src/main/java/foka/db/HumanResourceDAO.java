@@ -1,6 +1,7 @@
 package foka.db;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Repository;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.Tuple;
+import foka.comparator.CommentComparator;
 
 @Repository
 public class HumanResourceDAO {
@@ -69,16 +71,23 @@ public class HumanResourceDAO {
 		jedisPool.returnResource(jedis);
 	}
 	
-	public String updateComments(String humanName, String comment) {
+	public List<String> updateComments(String humanName, String comment) {
 		Jedis jedis = jedisPool.getResource();
-		if (jedis.exists(humanName)) {
-			jedis.append(humanName, comment);
-		}
-		else {
-			jedis.set(humanName, comment);
-		}
+		int number = jedis.smembers(humanName).size();
+		jedis.sadd(humanName, number + "-" + comment);
 		jedisPool.returnResource(jedis);
-		return jedis.get(humanName);
+		
+		List<String> commentsList = new ArrayList<String>(jedis.smembers(humanName));
+		
+		Collections.sort(commentsList, new CommentComparator());
+		
+		List<String> sortedCommentList = new ArrayList<String>();
+		
+		for (String comm : commentsList) {
+			sortedCommentList.add(comm.replaceFirst("\\d-", ""));
+		}
+		
+		return sortedCommentList;
 	}
 	
 	private void deleteComments(String humanName) {

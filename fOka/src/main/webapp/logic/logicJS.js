@@ -110,7 +110,7 @@ var logicJS = {
 			 modal: true,
 			 buttons: {
 			 "Add": function() {
-				that.addComment($(this).data('who'), $("#comment").val(), function() {that.updateCommentTip();}); 
+				that.addComment($(this).data('who'), $("#comment").val(), function(name, data) {that.getComments(name, data);}); 
 				 $(this).dialog("close");
 			 },
 			 "Cancel": function() {
@@ -132,16 +132,26 @@ var logicJS = {
 	addComment: function(name, comment, callback) {
 		$.ajax({
 			url: 'api/hr/' + name + '/comment',
-			data: comment,
+			data: JSON.stringify(comment),
+			dataType: 'json',
+			headers: { 
+		        'Accept': 'application/json',
+		        'Content-Type': 'application/json' 
+		    },
 			type: 'POST',
 			success: function(data) {
-				callback(data);
+				callback(name, data);
 			}
 		});
 	},
 	
-	updateCommentTip: function() {
-		
+	getComments: function(name, data) {
+		 var whoseFok = $("td.humanName:contains('"+ name +"')").siblings(".droppableCell").children('img');
+		 var listString = '';
+		 for (var i = data.length - 1; i > 0; i--) {
+			 listString += data[i] + '<br/>';
+		 }
+		whoseFok.attr('title', listString);
 	},
 	
 	insert: function(name) {
