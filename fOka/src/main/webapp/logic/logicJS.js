@@ -58,6 +58,7 @@ var logicJS = {
 				logicJS.addNewRow(record.humanName, record.fokCount);
 			});
 			logicJS.makeDroppable();
+			logicJS.displayComments();
 		});
 	},
 	
@@ -110,7 +111,7 @@ var logicJS = {
 			 modal: true,
 			 buttons: {
 			 "Add": function() {
-				that.addComment($(this).data('who'), $("#comment").val(), function(name, data) {that.getComments(name, data);}); 
+				that.addCommentIfNeededAndReturnAll($(this).data('who'), $("#comment").val(), function(name, data) {that.getComments(name, data);}); 
 				 $(this).dialog("close");
 			 },
 			 "Cancel": function() {
@@ -129,7 +130,7 @@ var logicJS = {
 		 });
 	},
 	
-	addComment: function(name, comment, callback) {
+	addCommentIfNeededAndReturnAll: function(name, comment, callback) {
 		$.ajax({
 			url: 'api/hr/' + name + '/comment',
 			data: JSON.stringify(comment),
@@ -147,11 +148,30 @@ var logicJS = {
 	
 	getComments: function(name, data) {
 		 var whoseFok = $("td.humanName:contains('"+ name +"')").siblings(".droppableCell").children('img');
-		 var listString = '';
-		 for (var i = data.length - 1; i > 0; i--) {
-			 listString += data[i] + '<br/>';
+		 var listString = '<ul class="ui-widget-content">';
+		 for (var i = 0; i < data.length; i++) {
+			 listString += '<li>' + data[i] + '</li>';
 		 }
-		whoseFok.attr('title', listString);
+		 listString += '</ul>';
+		 if (listString != '<ul class="ui-widget-content"></ul>') {
+			 whoseFok.attr('title', listString);
+			 whoseFok.tooltip({track: true, 
+	    		   delay: 20, 
+	    		   showURL: false});
+		 }
+	},
+	
+	displayComments: function() {
+		var droppableCells = $('td.droppableCell');
+		var that = this;
+		for (var i = 0; i < droppableCells.length; i++) {
+			if ($(droppableCells[i]).children('img').css('display') != 'none') {
+				var humanName = $.trim($(droppableCells[i]).siblings("td.humanName").text());
+				that.addCommentIfNeededAndReturnAll(humanName, "", 
+						function(name, data) {that.getComments(name, data);});
+				
+			}
+		}
 	},
 	
 	insert: function(name) {
