@@ -17,3 +17,7 @@ h1 {color: #ffffff; margin: 20px auto}
 		margin:3px;
 		font-size:14px;
 		overflow: hidden;}
+
+.humanName, .fOkCounter {
+	font-size: 30px;
+}
