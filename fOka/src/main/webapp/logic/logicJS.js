@@ -72,9 +72,20 @@ var logicJS = {
 		});
 		
 		$("#reset").click(function(){
-			logicJS.reset(function() {
-				logicJS.loadFokarium();
-			});
+			$("#resetConfirmation").dialog({
+				modal: true,
+				closeOnEscape: false,
+				buttons: [
+				{text: "Yes", click: function() { 
+									$(this).dialog("close");
+									logicJS.reset(function() {
+										logicJS.loadFokarium();
+									});
+							  }
+				},
+				{text: "No", click: function() { $(this).dialog("close");}},
+				]
+			}).show();
 		});
 	},
 	
