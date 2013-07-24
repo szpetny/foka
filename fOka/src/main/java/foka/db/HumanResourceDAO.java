@@ -73,9 +73,11 @@ public class HumanResourceDAO {
 	
 	public List<String> updateComments(String humanName, String comment) {
 		Jedis jedis = jedisPool.getResource();
-		int number = jedis.smembers(humanName).size();
-		jedis.sadd(humanName, number + "-" + comment);
-		jedisPool.returnResource(jedis);
+		
+		if (comment != null && "".equals(comment) == false) {
+			int number = jedis.smembers(humanName).size();
+			jedis.sadd(humanName, number + "-" + comment);
+		}
 		
 		List<String> commentsList = new ArrayList<String>(jedis.smembers(humanName));
 		
@@ -84,8 +86,10 @@ public class HumanResourceDAO {
 		List<String> sortedCommentList = new ArrayList<String>();
 		
 		for (String comm : commentsList) {
-			sortedCommentList.add(comm.replaceFirst("\\d-", ""));
+			sortedCommentList.add(comm.replaceFirst("\\d+-", ""));
 		}
+		
+		jedisPool.returnResource(jedis);
 		
 		return sortedCommentList;
 	}
