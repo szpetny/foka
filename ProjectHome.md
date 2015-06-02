@@ -1,0 +1,1 @@
+Spring app for giving sealOK among team. use redis instead of db
